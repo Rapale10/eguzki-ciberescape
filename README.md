@@ -122,7 +122,13 @@ La URL será: `https://TU-USUARIO.github.io/eguzki-ciberescape`
 Desarrollado durante el **Hackathon Internacional de Ciberseguridad — INCIBE Oviedo 2025**:
 
 - **Raúl Pajares Leis** — Universidad de Salamanca
-- *(resto de compañeros de equipo)*
+- **Sergio Vargas Moreno** - Universidad de Málaga
+- **Xabier Nóvoa Gómez** - Universidad de Santiago de Compostela
+- **Ariana Naomi Llaguno Mora** - Universidad de Oviedo
+- **Rubén Sánchez Serrano** - Universidad Complutense de Madrid
+- **Juan Nuñez Cayuela** - Universidad de Castilla-La Mancha
+- **Iván José Santana Duval** - Universidad de León
+- **Adrián Martín García** - Universidad de Almería
 
 Agradecimientos especiales a **INCIBE**, **Fundación Universidad de Oviedo** y **Universidad de Oviedo** por organizar y patrocinar el evento.
 
