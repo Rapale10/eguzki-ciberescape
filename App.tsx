@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Screen, UserProfile } from './types';
 import { Splash } from './components/screens/Splash';
@@ -17,7 +16,7 @@ import { Navbar } from './components/ui/Navbar';
 import { RANKS_DATA } from './constants';
 
 const INITIAL_PROFILE: UserProfile = {
-  name: "Xabi",
+  name: "",
   xp: 0,
   rank: "Becario de Distrito",
   level: 1,
@@ -35,8 +34,11 @@ export default function App() {
     if (savedProfile) {
       try {
         const parsed = JSON.parse(savedProfile);
-        // Merge with initial to ensure new fields exist if schema changes
         setProfile({ ...INITIAL_PROFILE, ...parsed });
+        // Si ya tiene nombre guardado, saltar directamente al Hub
+        if (parsed.name && parsed.name.trim() !== '') {
+          setCurrentScreen(Screen.HUB);
+        }
       } catch (e) {
         console.error("Failed to load profile", e);
       }
@@ -51,29 +53,17 @@ export default function App() {
   const gainXp = (amount: number) => {
     setProfile(prev => {
       const newXp = prev.xp + amount;
-      // Simple leveling logic: 1 level every 300 XP
       const newLevel = Math.floor(newXp / 300) + 1;
-      
-      // Calculate Rank based on XP thresholds defined in constants
-      // We find the highest rank where newXp >= rank.minXp
       let newRank = prev.rank;
       const applicableRank = [...RANKS_DATA].reverse().find(r => newXp >= r.minXp);
-      
       if (applicableRank) {
-          newRank = applicableRank.title;
+        newRank = applicableRank.title;
       }
-      
-      return {
-        ...prev,
-        xp: newXp,
-        level: newLevel,
-        rank: newRank
-      };
+      return { ...prev, xp: newXp, level: newLevel, rank: newRank };
     });
   };
 
   const handleLevelComplete = (levelId: number, xpReward: number) => {
-    // Only grant rewards if first time completing
     if (!profile.completedLevels.includes(levelId)) {
       gainXp(xpReward);
       setProfile(prev => ({
@@ -85,22 +75,21 @@ export default function App() {
   };
 
   const handleProfileUpdate = (newName: string) => {
-      setProfile(prev => ({ ...prev, name: newName }));
-      setCurrentScreen(Screen.HUB);
+    setProfile(prev => ({ ...prev, name: newName }));
+    setCurrentScreen(Screen.HUB);
   };
 
   const handleResetProgress = () => {
-      localStorage.removeItem('ciberescape_profile');
-      // Reset to a fresh object literal to ensure clean state
-      setProfile({
-        name: "Xabi",
-        xp: 0,
-        rank: "Becario de Distrito",
-        level: 1,
-        streak: 1,
-        completedLevels: []
-      });
-      setCurrentScreen(Screen.ONBOARDING);
+    localStorage.removeItem('ciberescape_profile');
+    setProfile(INITIAL_PROFILE);
+    setCurrentScreen(Screen.ONBOARDING);
+  };
+
+  // Recibe el nombre desde Onboarding y arranca el perfil con él
+  const handleOnboardingComplete = (name: string) => {
+    const newProfile = { ...INITIAL_PROFILE, name };
+    setProfile(newProfile);
+    setCurrentScreen(Screen.HUB);
   };
 
   const renderScreen = () => {
@@ -108,11 +97,11 @@ export default function App() {
       case Screen.SPLASH:
         return <Splash onComplete={() => setCurrentScreen(Screen.ONBOARDING)} />;
       case Screen.ONBOARDING:
-        return <Onboarding onComplete={() => setCurrentScreen(Screen.HUB)} />;
+        return <Onboarding onComplete={handleOnboardingComplete} />;
       case Screen.HUB:
         return (
-          <Hub 
-            profile={profile} 
+          <Hub
+            profile={profile}
             onSelectLevel={(levelId) => {
               if (levelId === 1) setCurrentScreen(Screen.LEVEL_1);
               if (levelId === 2) setCurrentScreen(Screen.LEVEL_2);
@@ -125,34 +114,34 @@ export default function App() {
         );
       case Screen.ARCADE:
         return (
-            <Arcade 
-                profile={profile} 
-                onSelectLevel={(levelId) => {
-                    if (levelId === 1) setCurrentScreen(Screen.LEVEL_1);
-                    if (levelId === 2) setCurrentScreen(Screen.LEVEL_2);
-                    if (levelId === 3) setCurrentScreen(Screen.LEVEL_3);
-                    if (levelId === 4) setCurrentScreen(Screen.LEVEL_4);
-                    if (levelId === 5) setCurrentScreen(Screen.LEVEL_5);
-                }}
-                onBack={() => setCurrentScreen(Screen.HUB)}
-            />
+          <Arcade
+            profile={profile}
+            onSelectLevel={(levelId) => {
+              if (levelId === 1) setCurrentScreen(Screen.LEVEL_1);
+              if (levelId === 2) setCurrentScreen(Screen.LEVEL_2);
+              if (levelId === 3) setCurrentScreen(Screen.LEVEL_3);
+              if (levelId === 4) setCurrentScreen(Screen.LEVEL_4);
+              if (levelId === 5) setCurrentScreen(Screen.LEVEL_5);
+            }}
+            onBack={() => setCurrentScreen(Screen.HUB)}
+          />
         );
       case Screen.ONLINE:
-          return <Online profile={profile} onBack={() => setCurrentScreen(Screen.HUB)} />;
+        return <Online profile={profile} onBack={() => setCurrentScreen(Screen.HUB)} />;
       case Screen.RESOURCES:
-          return <Resources onBack={() => setCurrentScreen(Screen.HUB)} />;
+        return <Resources onBack={() => setCurrentScreen(Screen.HUB)} />;
       case Screen.PROFILE_SETTINGS:
-          return (
-            <ProfileSettings 
-                profile={profile} 
-                onSave={handleProfileUpdate} 
-                onReset={handleResetProgress}
-                onBack={() => setCurrentScreen(Screen.HUB)} 
-            />
-          );
+        return (
+          <ProfileSettings
+            profile={profile}
+            onSave={handleProfileUpdate}
+            onReset={handleResetProgress}
+            onBack={() => setCurrentScreen(Screen.HUB)}
+          />
+        );
       case Screen.LEVEL_1:
         return (
-          <LevelOne 
+          <LevelOne
             onComplete={(success) => {
               if (success) handleLevelComplete(1, 100);
               else setCurrentScreen(Screen.HUB);
@@ -164,8 +153,8 @@ export default function App() {
         return (
           <LevelTwo
             onComplete={(success) => {
-               if (success) handleLevelComplete(2, 250);
-               else setCurrentScreen(Screen.HUB);
+              if (success) handleLevelComplete(2, 250);
+              else setCurrentScreen(Screen.HUB);
             }}
             onExit={() => setCurrentScreen(Screen.HUB)}
           />
@@ -174,31 +163,31 @@ export default function App() {
         return (
           <LevelThree
             onComplete={(success) => {
-               if (success) handleLevelComplete(3, 500);
-               else setCurrentScreen(Screen.HUB);
+              if (success) handleLevelComplete(3, 500);
+              else setCurrentScreen(Screen.HUB);
             }}
             onExit={() => setCurrentScreen(Screen.HUB)}
           />
         );
       case Screen.LEVEL_4:
         return (
-            <LevelFour 
-                onComplete={(success) => {
-                    if (success) handleLevelComplete(4, 300);
-                    else setCurrentScreen(Screen.HUB);
-                }}
-                onExit={() => setCurrentScreen(Screen.HUB)}
-            />
+          <LevelFour
+            onComplete={(success) => {
+              if (success) handleLevelComplete(4, 300);
+              else setCurrentScreen(Screen.HUB);
+            }}
+            onExit={() => setCurrentScreen(Screen.HUB)}
+          />
         );
       case Screen.LEVEL_5:
         return (
-            <LevelFive
-                onComplete={(success) => {
-                    if (success) handleLevelComplete(5, 600);
-                    else setCurrentScreen(Screen.HUB);
-                }}
-                onExit={() => setCurrentScreen(Screen.HUB)}
-            />
+          <LevelFive
+            onComplete={(success) => {
+              if (success) handleLevelComplete(5, 600);
+              else setCurrentScreen(Screen.HUB);
+            }}
+            onExit={() => setCurrentScreen(Screen.HUB)}
+          />
         );
       default:
         return <div className="p-10 text-white">Error: Pantalla desconocida</div>;
@@ -208,7 +197,7 @@ export default function App() {
   return (
     <div className="relative w-full h-screen flex flex-col bg-[#080d19]">
       <div className="cyber-scanline pointer-events-none absolute inset-0 z-50"></div>
-      
+
       {currentScreen !== Screen.SPLASH && currentScreen !== Screen.ONBOARDING && (
         <Navbar profile={profile} onNavigate={(screen) => setCurrentScreen(screen)} />
       )}
